@@ -8,3 +8,7 @@ class Shape(ABC):
     @abstractmethod
     def draw(self):
         pass
+
+    @abstractmethod
+    def contain(self, point):
+        pass
