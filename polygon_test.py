@@ -18,8 +18,8 @@ vertices=[
     (100,0)
 ]
 
-p = Polygon(screen=screen, color=YELLOW, edge_color=BLUE, vertices=vertices)
-c = Circle(screen=screen, color=YELLOW, edge_color=BLUE, center=[200,200], radius=50)
+p = Polygon(color=YELLOW, edge_color=BLUE, vertices=vertices)
+c = Circle(color=YELLOW, edge_color=BLUE, center=[200,200], radius=50)
 
 print(p.area())
 print(p.contain([50, 50]))
@@ -34,6 +34,6 @@ while running:
             running = False
     screen.fill((0, 0, 0))
 
-    p.draw(draw_edge=True)
-    c.draw(draw_edge=True)
+    p.draw(screen, draw_edge=True)
+    c.draw(screen, draw_edge=True)
     pygame.display.flip()

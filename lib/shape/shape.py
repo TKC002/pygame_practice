@@ -17,8 +17,7 @@ class Shape(ABC):
         pass
 
 class Segment(Shape):
-    def __init__(self, screen, color, vertices):
-        self.screen = screen
+    def __init__(self, color, vertices):
         self.color = color
         self.s = vertices[0] # A
         self.e = vertices[1] # B
@@ -28,8 +27,8 @@ class Segment(Shape):
     def area(self):
         return 0
     
-    def draw(self):
-        pygame.draw.line(surface=self.screen, color=self.color, start_pos=self.s, end_pos=self.e)
+    def draw(self, screen):
+        pygame.draw.line(surface=screen, color=self.color, start_pos=self.s, end_pos=self.e)
 
     def cross(self, seg):
         # determin whether two segments cross
@@ -55,10 +54,9 @@ class Segment(Shape):
         return False
 
 class Polygon(Shape):
-    def __init__(self, screen, color, vertices, edge_color=None):
+    def __init__(self, color, vertices, edge_color=None):
         # vertices: list of array-like
         # vertice: (x,y)
-        self.screen = screen
         self.color = color
         if edge_color is None:
             self.edge_color = color
@@ -71,7 +69,7 @@ class Polygon(Shape):
         for i in range(self.n):
             current = self.vertices[i]
             next = self.vertices[(i+1)%self.n]
-            edge = Segment(self.screen, self.edge_color, [current, next])
+            edge = Segment(self.edge_color, [current, next])
             self.edges.append(edge)
     
     def area(self):
@@ -85,14 +83,14 @@ class Polygon(Shape):
 
         return res
     
-    def draw(self, draw_edge=False):
-        pygame.draw.polygon(surface=self.screen, color=self.color, points=self.vertices)
+    def draw(self, screen, draw_edge=False):
+        pygame.draw.polygon(surface=screen, color=self.color, points=self.vertices)
         if draw_edge:
             for edge in self.edges:
-                edge.draw()
+                edge.draw(screen)
     
     def contain(self, point):
-        seg = Segment(None, None, [point, (point[0],65535)])
+        seg = Segment(None, [point, (point[0],65535)])
         cross_num=0
         for i in range(self.n):
             if self.edges[i].contain(point):
@@ -106,8 +104,7 @@ class Polygon(Shape):
             return False
 
 class Circle(Shape):
-    def __init__(self, screen, color, center, radius, edge_color=None):
-        self.screen = screen
+    def __init__(self, color, center, radius, edge_color=None):
         self.color = color
         self.center = center
         self.radius = radius
@@ -126,7 +123,8 @@ class Circle(Shape):
         else:
             return False
     
-    def draw(self, draw_edge=False):
-        pygame.draw.circle(self.screen, self.color, self.center, self.radius)
+    def draw(self, screen, draw_edge=False):
+        pygame.draw.circle(screen, self.color, self.center, self.radius)
         if draw_edge:
-            pygame.draw.circle(self.screen, self.edge_color, self.center, self.radius+1, width=1)
+            pygame.draw.circle(screen, self.edge_color, self.center, self.radius+1, width=1)
+
