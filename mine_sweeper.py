@@ -31,7 +31,7 @@ class Square:
 
 screen_width = 500
 screen_height = 500
-square_size = 50
+square_size = 20
 sw = screen_width//square_size
 sh = screen_height//square_size
 bomb_num = 20
@@ -47,7 +47,7 @@ for i in range(sh):
 
 for has_bomb in has_bombs:
     i = has_bomb//sh
-    j = has_bomb//sw
+    j = has_bomb%sw
     squares[i][j].has_bomb = True
 
 running = True

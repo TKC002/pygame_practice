@@ -16,19 +16,62 @@ class Shape(ABC):
     def contain(self, point):
         pass
 
-class Segment(Shape):
-    def __init__(self, color, vertices):
-        self.color = color
-        self.s = vertices[0] # A
-        self.e = vertices[1] # B
+    # @abstractmethod
+    # def pararell_move(self, direction):
+    #     pass
 
-        self.length = math.sqrt((self.e[0]-self.s[0])**2+(self.e[1]-self.s[1])**2)
+class Vector:
+    def __init__(self, elems):
+        if isinstance(elems, Vector):
+            self.elems = elems.elems
+        else:
+            self.elems = elems
+        self.dim = len(elems)
+        tmp = 0
+        for e in self.elems:
+            tmp += e**2
+        res = math.sqrt(tmp)
+        self.length = res
+    
+    def __add__(self, other):
+        elems = [e0+e1 for e0,e1 in zip(self.elems, other.elems)]
+        return Vector(elems)
+    
+    def __sub__(self, other):
+        elems = [e0-e1 for e0,e1 in zip(self.elems, other.elems)]
+        return Vector(elems)
+
+    def __len__(self):
+        return self.dim
+    
+    def __getitem__(self, position):
+        return self.elems[position]
+
+    def inner_product(self, other):
+        if self.dim != other.dim:
+            print('vector1 and vector2 must be same length.')
+            return False
+        res = 0
+        for e1, e2 in zip(self.elems, other.elems):
+            res += e1*e2
+        return res
+
+class Segment(Shape):
+    def __init__(self, color, vertice0, vertice1):
+        # vertices : list of list
+        self.color = color
+        # A
+        self.s = Vector(vertice0)
+        # B
+        self.e = Vector(vertice1)
+        self.vec = self.e-self.s
+        self.length = self.vec.length
     
     def area(self):
         return 0
     
     def draw(self, screen):
-        pygame.draw.line(surface=screen, color=self.color, start_pos=self.s, end_pos=self.e)
+        pygame.draw.line(surface=screen, color=self.color, start_pos=self.s.elems, end_pos=self.e.elems)
 
     def cross(self, seg):
         # determin whether two segments cross
@@ -43,33 +86,36 @@ class Segment(Shape):
             return False
 
     def contain(self, point):
-        vec = [self.e[0]-self.s[0], self.e[1]-self.s[1]] # B-A
-        point_vec = [point[0]-self.s[0], point[1]-self.s[1]] # P-A
+        if not isinstance(point, Vector):
+            point = Vector(point)
+        point_vec = point-self.s
 
-        point_vec_length = math.sqrt(point_vec[0]**2+point_vec[1]**2)
-
-        if inner_product(vec, point_vec) == self.length*point_vec_length:
-            if self.length >= point_vec_length:
+        if self.vec.inner_product(point_vec) == self.length*point_vec.length:
+            if self.length >= point_vec.length:
                 return True
         return False
+    
+    def pararell_move(self, direction):
+        self.s = self.s + direction
+        self.e = self.e+direction
 
 class Polygon(Shape):
     def __init__(self, color, vertices, edge_color=None):
-        # vertices: list of array-like
+        # vertices: list of list
         # vertice: (x,y)
         self.color = color
         if edge_color is None:
             self.edge_color = color
         else:
             self.edge_color = edge_color
-        self.vertices = [list(vertice) for vertice in vertices]
+        self.vertices = [Vector(vertice) for vertice in vertices]
         self.n = len(vertices)
         self.edges=[]
 
         for i in range(self.n):
-            current = self.vertices[i]
-            next = self.vertices[(i+1)%self.n]
-            edge = Segment(self.edge_color, [current, next])
+            current = vertices[i]
+            next = vertices[(i+1)%self.n]
+            edge = Segment(self.edge_color, current, next)
             self.edges.append(edge)
     
     def area(self):
@@ -84,19 +130,19 @@ class Polygon(Shape):
         return res
     
     def draw(self, screen, draw_edge=False):
-        pygame.draw.polygon(surface=screen, color=self.color, points=self.vertices)
+        vertices = [vec.elems for vec in self.vertices]
+        pygame.draw.polygon(surface=screen, color=self.color, points=vertices)
         if draw_edge:
             for edge in self.edges:
                 edge.draw(screen)
     
     def contain(self, point):
-        seg = Segment(None, [point, (point[0],65535)])
+        seg = Segment(None, point, (point[0],65535))
         cross_num=0
         for i in range(self.n):
             if self.edges[i].contain(point):
                 return True
             if self.edges[i].cross(seg):
-                print(i)
                 cross_num+=1
         if cross_num%2==1:
             return True
