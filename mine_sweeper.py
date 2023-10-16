@@ -20,11 +20,11 @@ class Square:
         self.opened = False
         self.size = size
         self.n = 0
+        self.flag = False
     
     def open(self):
         self.opened = True
         self.square.color=WHITE
-
 
     def draw(self, screen):
         if self.opened:
@@ -40,13 +40,15 @@ class Square:
                 screen.blit(text_surface, text_rect)
         else:
             self.square.draw(screen, draw_edge=True)
+            if self.flag:
+                pygame.draw.circle(screen, YELLOW, self.square.cog.elems, self.size*0.4)
 
 screen_width = 500
 screen_height = 500
 square_size = 20
 sw = screen_width//square_size
 sh = screen_height//square_size
-bomb_num = 50
+bomb_num = 100
 
 def chain_open(squares, i, j):
     if squares[i][j].n != 0:
@@ -64,46 +66,67 @@ def chain_open(squares, i, j):
 
 pygame.init()
 screen = pygame.display.set_mode((screen_width, screen_height))
-
-has_bombs = random.sample(range(sw*sh), bomb_num)
 squares = [[0 for j in range(sw)] for i in range(sh)]
-bomb_list = []
-
 for i in range(sh):
     for j in range(sw):
         squares[i][j] = Square(square_size, [square_size*j, square_size*i], False)
 
-for has_bomb in has_bombs:
-    i = has_bomb//sh
-    j = has_bomb%sw
-    squares[i][j].has_bomb = True
-    bomb_list.append([i,j])
-# set square.n
-for b in bomb_list:
-    i_min = max(0, b[0]-1)
-    i_max = min(sh, b[0]+2)
-    j_min = max(0, b[1]-1)
-    j_max = min(sw, b[1]+2)
-    for i in range(i_min, i_max):
-        for j in range(j_min, j_max):
-            squares[i][j].n += 1
+def place_bomb(i,j):
+    indices = list(range(sw*sh))
+    i_min = max(-1, i-2)
+    i_max = min(sh-1, i+1)
+    j_min = max(-1, j-2)
+    j_max = min(sw-1, j+1)
+    for k in range(i_max, i_min, -1):
+        for l in range(j_max, j_min, -1):
+            ind = k*sw+l
+            print(indices.pop(ind))
+    # print(indices)
+    has_bombs = random.sample(indices, bomb_num)
+    bomb_list = []
+
+    for has_bomb in has_bombs:
+        i = has_bomb//sw
+        j = has_bomb%sw
+        squares[i][j].has_bomb = True
+        bomb_list.append([i,j])
+    # set square.n
+    for b in bomb_list:
+        i_min = max(0, b[0]-1)
+        i_max = min(sh, b[0]+2)
+        j_min = max(0, b[1]-1)
+        j_max = min(sw, b[1]+2)
+        for i in range(i_min, i_max):
+            for j in range(j_min, j_max):
+                squares[i][j].n += 1
+    return bomb_list
 
 running = True
+clicked = False
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = event.pos
+            j = mouse_x // square_size
+            i = mouse_y // square_size
+            if not clicked:
+                bomb_list = place_bomb(i,j)
+                clicked = True
             if event.button == 1:  # 左クリック
-                mouse_x, mouse_y = event.pos
-                j = mouse_x // square_size
-                i = mouse_y // square_size
-                if squares[i][j].has_bomb:
-                    for b in bomb_list:
-                        squares[b[0]][b[1]].open()
+                if squares[i][j].flag==False:
+                    if squares[i][j].has_bomb:
+                        for b in bomb_list:
+                            squares[b[0]][b[1]].open()
+                    else:
+                        # squares[i][j].open()
+                        chain_open(squares, i, j)
+            if event.button == 3:  # 右クリック
+                if squares[i][j].flag:
+                    squares[i][j].flag = False
                 else:
-                    # squares[i][j].open()
-                    chain_open(squares, i, j)
+                    squares[i][j].flag = True
     screen.fill((0, 0, 0))
     for i in range(sh):
         for j in range(sw):
