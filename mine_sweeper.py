@@ -45,16 +45,22 @@ class Square:
 
 screen_width = 500
 screen_height = 500
-square_size = 20
+square_size = 50
 sw = screen_width//square_size
 sh = screen_height//square_size
-bomb_num = 100
+bomb_num = 10
+
+opened_num = [0]
 
 def chain_open(squares, i, j):
     if squares[i][j].n != 0:
         squares[i][j].open()
+        # print('i,j = ', i,j)
+        opened_num[0] +=1
+        # print(opened_num[0])
     else:
         squares[i][j].open()
+        opened_num[0] +=1
         i_min = max(0, i-1)
         i_max = min(sh, i+2)
         j_min = max(0, j-1)
@@ -80,7 +86,7 @@ def place_bomb(i,j):
     for k in range(i_max, i_min, -1):
         for l in range(j_max, j_min, -1):
             ind = k*sw+l
-            print(indices.pop(ind))
+            indices.pop(ind)
     # print(indices)
     has_bombs = random.sample(indices, bomb_num)
     bomb_list = []
@@ -119,9 +125,13 @@ while running:
                     if squares[i][j].has_bomb:
                         for b in bomb_list:
                             squares[b[0]][b[1]].open()
+                        print('You Lose!')
                     else:
                         # squares[i][j].open()
                         chain_open(squares, i, j)
+                # print(opened_num[0])
+                        if opened_num[0] == sh*sw-bomb_num:
+                            print('You Win!')
             if event.button == 3:  # 右クリック
                 if squares[i][j].flag:
                     squares[i][j].flag = False
