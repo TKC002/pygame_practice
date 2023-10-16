@@ -41,6 +41,14 @@ class Vector:
         elems = [e0-e1 for e0,e1 in zip(self.elems, other.elems)]
         return Vector(elems)
 
+    def __mul__(self, n):
+        elems = [n*e for e in self.elems]
+        return Vector(elems)
+    
+    def __truediv__(self, n):
+        elems = [e/n for e in self.elems]
+        return Vector(elems)
+
     def __len__(self):
         return self.dim
     
@@ -54,6 +62,22 @@ class Vector:
         res = 0
         for e1, e2 in zip(self.elems, other.elems):
             res += e1*e2
+        return res
+
+    def cross_product(self, other):
+        if len(other.length) != self.length:
+            print('vector1 and vector2 must be same length.')
+            return False
+        if self.length == 2:
+            self2 = 0
+            other2 = 0
+        else:
+            self2 = self.elems[2]
+            other2 = other.elems[2]
+        res = [0,0,0]
+        res[0]=self.elems[1]*other2-self2*other.elems[1]
+        res[1]=self2*other.elems[0]-self.elems[0]*other2
+        res[2]=self.elems[0]*other.elems[1]-self.elems[1]*other.elems[0]
         return res
 
 class Segment(Shape):
@@ -111,6 +135,10 @@ class Polygon(Shape):
         self.vertices = [Vector(vertice) for vertice in vertices]
         self.n = len(vertices)
         self.edges=[]
+        self.cog = Vector([0,0])
+        for v in self.vertices:
+            self.cog = self.cog+v
+        self.cog = self.cog/self.n
 
         for i in range(self.n):
             current = vertices[i]
