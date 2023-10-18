@@ -5,6 +5,14 @@ import time
 import random
 # Square for minesweeper
 colors = [None, CYAN, GREEN, RED, NAVY, BROWN, (102,205,170), RED, RED]
+# [hight, width, bomb_num, square_size]
+setting = {
+    "easy": [9, 9, 10, 50],
+    "normal": [16, 16, 40, 20],
+    "hard": [16, 30, 99, 20],
+    # "super": [50, 50, 500, 15],
+    # "alien": [100, 100, 2000, 10]
+}
 class Square:
     def __init__(self, size, coordinate, has_bomb):
         # coordinate : upper left coordinate
@@ -43,12 +51,23 @@ class Square:
             if self.flag:
                 pygame.draw.circle(screen, YELLOW, self.square.cog.elems, self.size*0.4)
 
-screen_width = 500
-screen_height = 500
-square_size = 20
-sw = screen_width//square_size
-sh = screen_height//square_size
-bomb_num = 100
+
+
+
+d = input(f'input difficulty{list(setting.keys())}, or custom > ')
+if d=='custom':
+    sh = int(input('input height > '))
+    sw = int(input('input width > '))
+    bomb_num = int(input('input number of bomb > '))
+    square_size = 20
+else:
+    print(setting[d])
+    sh = setting[d][0]
+    sw = setting[d][1]
+    bomb_num = setting[d][2]
+    square_size = setting[d][3]
+screen_height = square_size*sh
+screen_width = square_size*sw
 
 opened_num = [0]
 
