@@ -50,7 +50,17 @@ class Square:
             self.square.draw(screen, draw_edge=True)
             if self.flag:
                 pygame.draw.circle(screen, YELLOW, self.square.cog.elems, self.size*0.4)
-
+class Counter:
+    def __init__(self, screen_width, screen_height):
+        self.height = 100
+        vertices = [(0,screen_height), 
+                    (screen_width, screen_height),
+                    (screen_width, screen_height+self.height),
+                    (0, screen_height+self.height)]
+        self.rect = Polygon(GREY, vertices, None)
+    
+    def draw(self, screen):
+        self.rect.draw(screen)
 
 
 
@@ -90,7 +100,8 @@ def chain_open(squares, i, j):
                     chain_open(squares, k, l)
 
 pygame.init()
-screen = pygame.display.set_mode((screen_width, screen_height))
+counter = Counter(screen_width, screen_height)
+screen = pygame.display.set_mode((screen_width, screen_height+counter.height))
 squares = [[0 for j in range(sw)] for i in range(sh)]
 for i in range(sh):
     for j in range(sw):
@@ -126,11 +137,17 @@ def place_bomb(i,j):
                 squares[i][j].n += 1
     return bomb_list
 
+def draw():
+    for i in range(sh):
+        for j in range(sw):
+            squares[i][j].draw(screen)
+    counter.draw(screen)
+
 running = True
 clicked = False
-for i in range(sh):
-    for j in range(sw):
-        squares[i][j].draw(screen)
+bomb_remain = bomb_num
+
+draw()
 pygame.display.flip()
 while running:
     for event in pygame.event.get():
@@ -140,30 +157,32 @@ while running:
             mouse_x, mouse_y = event.pos
             j = mouse_x // square_size
             i = mouse_y // square_size
-            if not clicked:
-                bomb_list = place_bomb(i,j)
-                clicked = True
-            if event.button == 1:  # 左クリック
-                if squares[i][j].flag==False and squares[i][j].opened==False:
-                    if squares[i][j].has_bomb:
-                        for b in bomb_list:
-                            squares[b[0]][b[1]].open()
-                        print('You Lose!')
+            if mouse_x <= screen_height and mouse_y <= screen_width:
+                if not clicked: # 最初のクリック
+                    bomb_list = place_bomb(i,j)
+                    clicked = True
+                if event.button == 1:  # 左クリック
+                    if squares[i][j].flag==False and squares[i][j].opened==False:
+                        if squares[i][j].has_bomb:
+                            for b in bomb_list:
+                                squares[b[0]][b[1]].open()
+                            print('You Lose!')
+                        else:
+                            # squares[i][j].open()
+                            chain_open(squares, i, j)
+                            # print(opened_num[0])
+                            if opened_num[0] == sh*sw-bomb_num:
+                                print('You Win!')
+                if event.button == 3:  # 右クリック
+                    if squares[i][j].flag:
+                        squares[i][j].flag = False
+                        bomb_remain+=1
                     else:
-                        # squares[i][j].open()
-                        chain_open(squares, i, j)
-                        # print(opened_num[0])
-                        if opened_num[0] == sh*sw-bomb_num:
-                            print('You Win!')
-            if event.button == 3:  # 右クリック
-                if squares[i][j].flag:
-                    squares[i][j].flag = False
-                else:
-                    squares[i][j].flag = True
-            screen.fill((0, 0, 0))
-            for i in range(sh):
-                for j in range(sw):
-                    squares[i][j].draw(screen)
+                        squares[i][j].flag = True
+                        bomb_remain-=1
+                    print(bomb_remain)
+                screen.fill((0, 0, 0))
+                draw()
             pygame.display.flip()
 
         
